@@ -14,6 +14,8 @@ import EventForm from '../components/EventForm';
 import TaskForm from '../components/TaskForm';
 import { Colors } from '../utils/colors';
 import { formatDate, getWeekDays, getEventsForDate, getTasksForDate } from '../utils/dateUtils';
+import { getLunarDateStr, getLunarFullStr } from '../utils/lunarUtils';
+import { getHolidaysForDate, HolidayColors } from '../utils/holidays';
 import { format } from 'date-fns';
 import { zhTW } from 'date-fns/locale';
 
@@ -80,6 +82,25 @@ export default function WeekView() {
                 <Text style={[styles.dayNum, isToday(day) && styles.today, active && styles.dayTextActive]}>
                   {day.getDate()}
                 </Text>
+                <Text style={[styles.lunarNum, active && styles.lunarNumActive]}>
+                  {getLunarDateStr(day.getFullYear(), day.getMonth() + 1, day.getDate())}
+                </Text>
+                {(() => {
+                  const hols = getHolidaysForDate(day.getFullYear(), day.getMonth() + 1, day.getDate());
+                  if (!hols.length) return null;
+                  const h = hols[0];
+                  return (
+                    <Text style={[
+                      styles.weekHolidayTag,
+                      h.type === 'TW'    && styles.weekHolidayTW,
+                      h.type === 'US'    && styles.weekHolidayUS,
+                      h.type === 'LUNAR' && styles.weekHolidayLunar,
+                      active && styles.weekHolidayActive,
+                    ]} numberOfLines={1}>
+                      {h.name}
+                    </Text>
+                  );
+                })()}
                 {(dayEvents.length > 0 || dayTasks.length > 0) && (
                   <View style={styles.dot}>
                     <Text style={styles.dotText}>{dayEvents.length + dayTasks.length}</Text>
@@ -94,9 +115,31 @@ export default function WeekView() {
       <ScrollView style={styles.content}>
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>
-              {format(selectedDay, 'M月d日 EEEE', { locale: zhTW })} 事件
-            </Text>
+            <View>
+              <Text style={styles.sectionTitle}>
+                {format(selectedDay, 'M月d日 EEEE', { locale: zhTW })} 事件
+              </Text>
+              <Text style={styles.lunarSubtitle}>
+                {getLunarFullStr(selectedDay.getFullYear(), selectedDay.getMonth() + 1, selectedDay.getDate())}
+              </Text>
+              {(() => {
+                const hols = getHolidaysForDate(
+                  selectedDay.getFullYear(), selectedDay.getMonth() + 1, selectedDay.getDate()
+                );
+                if (!hols.length) return null;
+                return (
+                  <View style={styles.weekHolidayRow}>
+                    {hols.map((h, i) => (
+                      <View key={i} style={[styles.weekHolidayBadge, { backgroundColor: HolidayColors[h.type].bg }]}>
+                        <Text style={[styles.weekHolidayBadgeText, { color: HolidayColors[h.type].text }]}>
+                          {HolidayColors[h.type].label} {h.name}
+                        </Text>
+                      </View>
+                    ))}
+                  </View>
+                );
+              })()}
+            </View>
             <TouchableOpacity style={styles.addBtn} onPress={handleAddEvent}>
               <Text style={styles.addBtnText}>+ 事件</Text>
             </TouchableOpacity>
@@ -209,6 +252,46 @@ const styles = StyleSheet.create({
   today: {
     color: Colors.primary,
     fontWeight: '700',
+  },
+  lunarNum: {
+    fontSize : 9,
+    color    : Colors.textSecondary,
+    marginTop: 1,
+  },
+  lunarNumActive: {
+    color: 'rgba(255,255,255,0.8)',
+  },
+  lunarSubtitle: {
+    fontSize  : 11,
+    color     : Colors.textSecondary,
+    marginTop : 2,
+  },
+  // ── 節假日（日卡片內） ─────────────────────────────────────
+  weekHolidayTag: {
+    fontSize  : 8,
+    marginTop : 2,
+    fontWeight: '500',
+    textAlign : 'center',
+  },
+  weekHolidayTW    : { color: '#C62828' },
+  weekHolidayUS    : { color: '#1565C0' },
+  weekHolidayLunar : { color: '#BF360C' },
+  weekHolidayActive: { color: 'rgba(255,255,255,0.9)' },
+  // ── 節假日 badges（事件列標題旁） ─────────────────────────
+  weekHolidayRow: {
+    flexDirection: 'row',
+    flexWrap     : 'wrap',
+    gap          : 4,
+    marginTop    : 4,
+  },
+  weekHolidayBadge: {
+    paddingHorizontal: 6,
+    paddingVertical  : 2,
+    borderRadius     : 8,
+  },
+  weekHolidayBadgeText: {
+    fontSize  : 10,
+    fontWeight: '600',
   },
   dot: {
     backgroundColor: Colors.accent,

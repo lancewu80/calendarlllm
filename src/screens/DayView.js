@@ -14,6 +14,8 @@ import EventForm from '../components/EventForm';
 import TaskForm from '../components/TaskForm';
 import { Colors } from '../utils/colors';
 import { formatDate, getEventsForDate, getTasksForDate } from '../utils/dateUtils';
+import { getLunarFullStr } from '../utils/lunarUtils';
+import { getHolidaysForDate, HolidayColors } from '../utils/holidays';
 import { format } from 'date-fns';
 import { zhTW } from 'date-fns/locale';
 
@@ -81,6 +83,26 @@ export default function DayView() {
       <View style={styles.header}>
         <Text style={styles.dateText}>{dateStr}</Text>
         <Text style={styles.dayText}>{dayName} {monthDay}</Text>
+        <Text style={styles.lunarText}>
+          {getLunarFullStr(currentDate.getFullYear(), currentDate.getMonth() + 1, currentDate.getDate())}
+        </Text>
+        {(() => {
+          const hols = getHolidaysForDate(
+            currentDate.getFullYear(), currentDate.getMonth() + 1, currentDate.getDate()
+          );
+          if (!hols.length) return null;
+          return (
+            <View style={styles.dayHolidayRow}>
+              {hols.map((h, i) => (
+                <View key={i} style={styles.dayHolidayChip}>
+                  <Text style={styles.dayHolidayChipText}>
+                    {HolidayColors[h.type].label} {h.name}
+                  </Text>
+                </View>
+              ))}
+            </View>
+          );
+        })()}
       </View>
 
       <ScrollView style={styles.content}>
@@ -161,10 +183,35 @@ const styles = StyleSheet.create({
     color: 'rgba(255,255,255,0.8)',
   },
   dayText: {
-    fontSize: 20,
+    fontSize  : 20,
     fontWeight: '700',
-    color: '#FFF',
-    marginTop: 4,
+    color     : '#FFF',
+    marginTop : 4,
+  },
+  lunarText: {
+    fontSize : 12,
+    color    : 'rgba(255,255,255,0.75)',
+    marginTop: 3,
+  },
+  dayHolidayRow: {
+    flexDirection : 'row',
+    flexWrap      : 'wrap',
+    justifyContent: 'center',
+    gap           : 6,
+    marginTop     : 8,
+  },
+  dayHolidayChip: {
+    backgroundColor  : 'rgba(255,255,255,0.18)',
+    paddingHorizontal: 10,
+    paddingVertical  : 3,
+    borderRadius     : 12,
+    borderWidth      : 1,
+    borderColor      : 'rgba(255,255,255,0.35)',
+  },
+  dayHolidayChipText: {
+    color     : '#FFF',
+    fontSize  : 12,
+    fontWeight: '600',
   },
   content: {
     flex: 1,

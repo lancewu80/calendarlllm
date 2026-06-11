@@ -12,6 +12,7 @@ import TaskItem from '../components/TaskItem';
 import TaskForm from '../components/TaskForm';
 import { Colors } from '../utils/colors';
 import { getUpcomingTasks, formatDate } from '../utils/dateUtils';
+import { getLunarFullWithYearStr } from '../utils/lunarUtils';
 import { addDays } from 'date-fns';
 
 export default function TodoScreen() {
@@ -77,6 +78,11 @@ export default function TodoScreen() {
     return dateStr;
   };
 
+  const getDateLunar = (dateStr) => {
+    const [y, m, d] = dateStr.split('-').map(Number);
+    return getLunarFullWithYearStr(y, m, d);
+  };
+
   const filters = [
     { key: 'all', label: '全部' },
     { key: 'today', label: '今天' },
@@ -126,7 +132,10 @@ export default function TodoScreen() {
           .map((dateStr) => (
             <View key={dateStr}>
               <View style={styles.dateGroupHeader}>
-                <Text style={styles.dateGroupLabel}>{getDateLabel(dateStr)}</Text>
+                <View>
+                  <Text style={styles.dateGroupLabel}>{getDateLabel(dateStr)}</Text>
+                  <Text style={styles.dateGroupLunar}>{getDateLunar(dateStr)}</Text>
+                </View>
                 <Text style={styles.dateGroupCount}>{groupedByDate[dateStr].length} 項</Text>
               </View>
               {groupedByDate[dateStr].map((task) => (
@@ -234,9 +243,14 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   dateGroupLabel: {
-    fontSize: 14,
+    fontSize  : 14,
     fontWeight: '700',
-    color: Colors.text,
+    color     : Colors.text,
+  },
+  dateGroupLunar: {
+    fontSize : 11,
+    color    : Colors.textSecondary,
+    marginTop: 1,
   },
   dateGroupCount: {
     fontSize: 12,

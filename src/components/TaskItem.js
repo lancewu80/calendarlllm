@@ -2,6 +2,7 @@ import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { Colors, PriorityColors } from '../utils/colors';
 import { PRIORITY_LABELS } from '../utils/dateUtils';
+import { getLunarFullWithYearStr } from '../utils/lunarUtils';
 
 export default function TaskItem({ task, onToggle, onPress }) {
   const priorityStyle = PriorityColors[task.priority] || PriorityColors.medium;
@@ -21,9 +22,16 @@ export default function TaskItem({ task, onToggle, onPress }) {
         <Text style={[styles.title, task.completed && styles.titleCompleted]} numberOfLines={1}>
           {task.title}
         </Text>
-        {task.date && (
-          <Text style={styles.date}>{task.date}</Text>
-        )}
+        {task.date && (() => {
+          const [y, m, d] = task.date.split('-').map(Number);
+          const lunarStr = getLunarFullWithYearStr(y, m, d);
+          return (
+            <View>
+              <Text style={styles.date}>{task.date}</Text>
+              {lunarStr ? <Text style={styles.lunarDate}>{lunarStr}</Text> : null}
+            </View>
+          );
+        })()}
       </View>
       <View style={[styles.priorityBadge, { backgroundColor: priorityStyle.bg }]}>
         <Text style={[styles.priorityText, { color: priorityStyle.text }]}>
@@ -86,9 +94,14 @@ const styles = StyleSheet.create({
     color: Colors.textSecondary,
   },
   date: {
-    fontSize: 12,
-    color: Colors.textSecondary,
+    fontSize : 12,
+    color    : Colors.textSecondary,
     marginTop: 2,
+  },
+  lunarDate: {
+    fontSize : 11,
+    color    : Colors.primary,
+    marginTop: 1,
   },
   priorityBadge: {
     paddingHorizontal: 8,
