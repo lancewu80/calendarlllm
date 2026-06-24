@@ -77,3 +77,6 @@ npm run electron:dev
 # 3. 打包 Windows 版
 npm run electron:build:win
 # → 輸出到 electron-dist/CalendarLLM Setup x.x.x.exe
+
+4. Mac打包
+npm run electron:build:mac

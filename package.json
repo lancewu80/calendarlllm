@@ -42,6 +42,7 @@
     "appId": "com.calendarlllm.app",
     "productName": "CalendarLLM",
     "copyright": "Copyright © 2024 CalendarLLM",
+    "asar": false,
     "extraMetadata": {
       "main": "electron/main.js"
     },

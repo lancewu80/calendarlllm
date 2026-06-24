@@ -1,7 +1,17 @@
 'use strict';
 
-const { app, BrowserWindow, Menu, shell, dialog } = require('electron');
+const { app, BrowserWindow, Menu, shell, dialog, protocol, net } = require('electron');
 const path = require('path');
+const { pathToFileURL } = require('url');
+
+// 必須在 app ready 之前宣告自訂 protocol
+// 讓 Expo 匯出的 index.html 裡的絕對路徑（如 /_expo/... /assets/...）能正確解析
+protocol.registerSchemesAsPrivileged([
+  {
+    scheme: 'app',
+    privileges: { secure: true, standard: true, supportFetchAPI: true, allowServiceWorkers: true },
+  },
+]);
 
 // 判斷是開發模式還是打包後的生產模式
 const isDev = !app.isPackaged;
@@ -36,9 +46,9 @@ function createWindow() {
     win.loadURL('http://localhost:8081');
     win.webContents.openDevTools();
   } else {
-    // 生產模式：載入 Expo export 出的靜態檔案
-    const indexPath = path.join(__dirname, '../dist/index.html');
-    win.loadFile(indexPath).catch((err) => {
+    // 生產模式：透過自訂 app:// 協議載入，解決絕對路徑問題
+    // 使用 app://localhost/index.html 確保 pathname 為 /index.html 而非 /
+    win.loadURL('app://localhost/index.html').catch((err) => {
       dialog.showErrorBox(
         '載入失敗',
         `無法載入應用程式：\n${err.message}\n\n請確認 dist/ 資料夾存在。`
@@ -125,6 +135,16 @@ function buildMenu() {
 }
 
 app.whenReady().then(() => {
+  // 註冊 app:// 協議，將所有請求對應到 dist/ 資料夾
+  // 解決 Expo export 產生的絕對路徑（/_expo/... /assets/...）在 file:// 下無法載入的問題
+  protocol.handle('app', (request) => {
+    const url = new URL(request.url);
+    // url.pathname 例如 /index.html、/_expo/static/js/...
+    const filePath = path.join(__dirname, '../dist', url.pathname);
+    // 用 pathToFileURL 正確處理 Windows 路徑（C:\... → file:///C:/...）
+    return net.fetch(pathToFileURL(filePath).toString());
+  });
+
   buildMenu();
   createWindow();
 
