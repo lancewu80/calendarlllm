@@ -21,11 +21,66 @@
     "react-native-web": "^0.20.0",
     "uuid": "^14.0.0"
   },
+  "devDependencies": {
+    "concurrently": "^9.0.0",
+    "electron": "^33.0.0",
+    "electron-builder": "^25.0.0",
+    "wait-on": "^8.0.0"
+  },
   "scripts": {
     "start": "expo start",
     "android": "expo run:android",
     "ios": "expo run:ios",
-    "web": "expo start --web"
+    "web": "expo start --web",
+    "electron:dev": "concurrently --kill-others \"expo start --web --port 8081\" \"wait-on http://localhost:8081 && electron electron/main.js\"",
+    "electron:build": "expo export -p web && electron-builder",
+    "electron:build:win": "expo export -p web && electron-builder --win",
+    "electron:build:mac": "expo export -p web && electron-builder --mac",
+    "electron:build:all": "expo export -p web && electron-builder --win --mac"
+  },
+  "build": {
+    "appId": "com.calendarlllm.app",
+    "productName": "CalendarLLM",
+    "copyright": "Copyright © 2024 CalendarLLM",
+    "extraMetadata": {
+      "main": "electron/main.js"
+    },
+    "files": [
+      "electron/**/*",
+      "dist/**/*",
+      "assets/icon.png",
+      "assets/icon512.png"
+    ],
+    "directories": {
+      "buildResources": "assets",
+      "output": "electron-dist"
+    },
+    "win": {
+      "target": [
+        { "target": "nsis", "arch": ["x64"] }
+      ],
+      "icon": "assets/icon512.png"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "installerLanguages": ["zh_TW", "en_US"],
+      "language": "1028"
+    },
+    "mac": {
+      "target": [
+        { "target": "dmg", "arch": ["x64", "arm64"] }
+      ],
+      "icon": "assets/icon512.png",
+      "category": "public.app-category.productivity",
+      "darkModeSupport": true
+    },
+    "dmg": {
+      "title": "CalendarLLM",
+      "window": { "width": 540, "height": 380 }
+    }
   },
   "private": true
 }
